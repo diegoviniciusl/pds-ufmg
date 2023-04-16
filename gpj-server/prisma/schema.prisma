@@ -1,0 +1,154 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["clientExtensions"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  userId         Int            @id @default(autoincrement()) @map("user_id")
+  name           String
+  email          String         @unique
+  phone          String?
+  password       String
+  role           Role
+  active         Boolean        @default(true)
+  trialHistories TrialHistory[] @relation("user_trial_histories")
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+
+  @@map("user")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+model Company {
+  companyId          Int       @id @default(autoincrement()) @map("company_id")
+  name               String
+  email              String?
+  phone              String?
+  taxNumber          String?   @unique @map("tax_number")
+  notes              String?
+  receiptDescription String?
+  clientTrials       Trial[]   @relation("client_trials")
+  officeTrials       Trial[]   @relation("office_trials")
+  createdAt          DateTime  @default(now()) @map("created_at")
+  updatedAt          DateTime  @updatedAt @map("updated_at")
+
+  @@map("company")
+}
+
+model Trial {
+  trialId                Int            @id @default(autoincrement()) @map("trial_id")
+  client                 Company        @relation("client_trials", fields: [clientId], references: [companyId])
+  clientId               Int            @map("client_id")
+  office                 Company?       @relation("office_trials", fields: [officeId], references: [companyId])
+  officeId               Int?           @map("office_id")
+  status                 TrialStatus    @default(PENDING)
+  orderableStatus        Int            @default(0) @map("orderable_status")
+  trialRequestedByOffice Boolean        @map("trial_requested_by_office")
+  lawyer                 String?
+  email                  String?
+  taskType               TaskType       @map("task_type")
+  trialNumber            String?        @map("trial_number")
+  deadline               DateTime       @db.Date
+  side                   TrialSide?
+  plaintiff              String?
+  defendant              String?
+  privateAnnotations     String?        @map("private_annotations")
+  publicAnnotations      String?        @map("public_annotations")
+  trialHistories         TrialHistory[] @relation("trial_trial_histories")
+  createdAt              DateTime       @default(now()) @map("created_at")
+  updatedAt              DateTime       @updatedAt @map("updated_at")
+
+  @@map("trial")
+}
+
+enum TrialStatus {
+  PENDING
+  IN_PROGRESS
+  TO_CHECK
+  IN_CONFERENCE
+  CHECKED
+  SENT
+}
+
+enum TaskType {
+  CALCULATION_ADJUSTMENT_3
+  GR_CALCULATION_ADJUSTMENT
+  FINANCIAL_ANALYSIS
+  TCD_ANALYSIS
+  WORKING_HOURS_ACCOUNTING
+  UPDATE
+  UPDATE_AND_OPINION
+  REAL_ESTATE_EVALUATION
+  CALCULATIONS_AND_OPINION
+  CALCULATIONS_AND_QUESTION
+  CHEQUE_SPECIAL_CALCULATIONS
+  COMPENSATION_CALCULATIONS
+  FGTS_CALCULATIONS
+  LOAS_CALCULATIONS
+  RESCISSION_CALCULATIONS
+  CALCULATIONS_AND_IMPUGNATION
+  AGREEMENT_CALCULATIONS
+  LIQUIDATION_CALCULATIONS
+  REDUCED_LIQUIDATION_CALCULATIONS
+  INSS_AND_IR_CALCULATIONS
+  INSTRUCTION_CALCULATIONS
+  CALCULATIONS_CONFERENCE
+  JUDGMENT_CONTINGENCY
+  INITIAL_CONTINGENCY
+  SENTENCE_CONTINGENCY
+  DILIGENCE
+  CLARIFICATION
+  INFLATIONARY_PURGE
+  IMPUGNATION
+  PERITIAL_HONORARIUM_IMPUGNATION
+  REAL_ESTATE_IMPUGNATION
+  CALCULATION_ENV_BAS_INFO
+  TECHNICAL_OPINION
+  INSALUBRITY_EXPERTISE
+  INSTRUCTION_EXPERTISE
+  MEDICAL_EXPERTISE
+  OFFICIAL_EXPERTISE
+  DANGEROUSNESS_EXPERTISE
+  MEDICAL_QUESTION
+  QUESTIONS
+  QUESTIONS_AND_IMPUGNATION
+  REAL_ESTATE_QUESTIONS
+  FINANCING_RECAL
+  MANAGERIAL_REPORT
+  DOCUMENTATION_REQUEST
+  DILIGENCE_TERM
+  IMPUGNATION_VIEW
+  ACTUARIAL_CALCULATION
+  OTHERS
+}
+
+enum TrialSide {
+  PLAINTIFF
+  DEFENDANT
+  OFFICIAL
+}
+
+model TrialHistory {
+  trialHistoryId Int         @id @default(autoincrement()) @map("trial_history_id")
+  trial          Trial       @relation("trial_trial_histories", fields: [trialId], references: [trialId])
+  trialId        Int         @map("trial_id")
+  user           User        @relation("user_trial_histories", fields: [userId], references: [userId])
+  userId         Int         @map("user_id")
+  status         TrialStatus
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+
+  @@map("trial_history")
+}
