@@ -3,9 +3,8 @@ import { generateAccessToken } from '../../src/utils/jwt-token-helper';
 
 const generateTestAuth = async (prisma: PrismaClient) => {
   const user = {
-    userId: 1,
     name: 'Teste da Silva',
-    email: 'email@teste.com',
+    email: 'auth@teste.com',
     role: Role.ADMIN,
     active: true,
     phone: '123456789',
@@ -14,13 +13,11 @@ const generateTestAuth = async (prisma: PrismaClient) => {
     updatedAt: new Date(),
   };
 
-  await prisma.user.deleteMany({});
-
-  await prisma.user.create({
+  const newUser = await prisma.user.create({
     data: user,
   });
 
-  return `Bearer ${generateAccessToken(user)}`;
+  return `Bearer ${generateAccessToken({ ...user, userId: newUser.userId })}`;
 };
 
 export default generateTestAuth;
